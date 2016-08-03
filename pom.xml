@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+		http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>net.imagej</groupId>
+        <artifactId>pom-imagej</artifactId>
+        <version>9.2.0</version>	
+	</parent>
+
+	<groupId>mpicbg_scicomp</groupId>
+	<artifactId>Min_Cost_ZSurface</artifactId>
+	<version>1.1.0</version>
+
+	<name>Min_Cost_ZSurface</name>
+	
+	
+	<description>
+		an IJ plugin detecting optimal z surface (surface for which z = f(x,y)) in a 3D volume. the method is described in:
+		Kang Li et al., "Optimal surface segmentation in volumetric images - a Graph-theoretic approach", IEEE transactions on pattern analysis and machine intelligence, vol 28, n 1, 2006.
+	</description>
+
+	<dependencies>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>ij</artifactId>
+		</dependency>	
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2</artifactId>
+			<version>2.2.1</version>
+		</dependency>		
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-ij</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-algorithm</artifactId>
+			<version>0.2.1</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>Graph_Cut</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+	</dependencies>
+
+
+	<developers>
+		<developer>
+			<name> Benoit Lombardot </name>
+			<organization>Scientific Computing facility, MPI-CBG</organization>
+		</developer>
+	</developers>
+
+	<repositories>
+		<!-- NB: for project parent -->
+		<repository>
+			<id>imagej.public</id>
+			<url>http://maven.imagej.net/content/groups/public</url>
+		</repository>
+	</repositories>
+
+</project>
