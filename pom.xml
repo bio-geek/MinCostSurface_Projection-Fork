@@ -8,14 +8,14 @@
 	<parent>
 		<groupId>net.imagej</groupId>
         <artifactId>pom-imagej</artifactId>
-        <version>9.2.0</version>	
+        <version>15.8.0</version>	
 	</parent>
 
-	<groupId>mpicbg_scicomp</groupId>
-	<artifactId>Min_Cost_ZSurface</artifactId>
+	<groupId>de.mpicbg.scf</groupId>
+	<artifactId>MinCostZSurface_</artifactId>
 	<version>1.1.0</version>
 
-	<name>Min_Cost_ZSurface</name>
+	<name>MinCostZSurface_</name>
 	
 	
 	<description>
@@ -31,7 +31,6 @@
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2</artifactId>
-			<version>2.2.1</version>
 		</dependency>		
 		<dependency>
 			<groupId>net.imglib2</groupId>
@@ -40,7 +39,6 @@
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-algorithm</artifactId>
-			<version>0.2.1</version>
 		</dependency>
 		
 		<dependency>
