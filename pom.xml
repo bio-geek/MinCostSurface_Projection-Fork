@@ -1,41 +1,98 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
 		http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-
-	<parent>
-		<groupId>net.imagej</groupId>
-        <artifactId>pom-imagej</artifactId>
-        <version>15.8.0</version>	
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+    	<groupId>org.scijava</groupId>
+		<artifactId>pom-scijava</artifactId>
+		<version>16.2.0</version>
+		<relativePath/>
 	</parent>
 
 	<groupId>de.mpicbg.scf</groupId>
 	<artifactId>MinCostZSurface_</artifactId>
-	<version>1.1.0</version>
+	<version>1.1.1</version>
 
 	<name>MinCostZSurface_</name>
-	
-	
 	<description>
 		an IJ plugin detecting optimal z surface (surface for which z = f(x,y)) in a 3D volume. the method is described in:
-		Kang Li et al., "Optimal surface segmentation in volumetric images - a Graph-theoretic approach", IEEE transactions on pattern analysis and machine intelligence, vol 28, n 1, 2006.
-	</description>
+		Kang Li et al., "Optimal surface segmentation in volumetric images - a Graph-theoretic approach", IEEE transactions on pattern analysis and machine intelligence, vol 28, n 1, 2006.</description>
+	<url>none</url>
+	<inceptionYear>2014</inceptionYear>
+	<organization>
+		<name>de.mpicbg.scf</name>
+		<url>none</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>BSD3</name>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<developers>
+		<!-- See https://imagej.net/Team -->
+		<developer>
+			<id>Benoit</id>
+			<name>Benoit Lombardot</name>
+			<url>http://imagej.net/User:Benoit</url>
+			<roles>
+				<role>founder</role>
+				<role>developer</role>
+			</roles>
+		</developer>
+	</developers>
+	<contributors>
+		<contributor>
+			<name>none</name>
+		</contributor>
+	</contributors>
+
+	<mailingLists>
+		<mailingList>
+			<name>none</name>
+			<archive>none</archive>
+		</mailingList>
+	</mailingLists>
+
+	 <scm>
+        <url>none</url>
+    </scm>
+    <issueManagement>
+        <system>None</system>
+    </issueManagement>
+    <ciManagement>
+        <system>None</system>
+    </ciManagement>
+
+
+
+	<properties>
+		<package-name>mincostsurface</package-name>
+		<main-class>de.mpicg.scf.mincostsurface.MinCostZSurface_Plugin</main-class>
+		<license.licenseName>BSD3</license.licenseName>
+		<license.copyrightOwners>MPI-CBG</license.copyrightOwners>
+	</properties>
+
+
+	<repositories>
+		<repository>
+			<id>imagej.public</id>
+			<url>http://maven.imagej.net/content/groups/public</url>
+		</repository>
+	</repositories>
+
 
 	<dependencies>
+		
 		<dependency>
 			<groupId>net.imagej</groupId>
-			<artifactId>ij</artifactId>
-		</dependency>	
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2</artifactId>
-		</dependency>		
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2-ij</artifactId>
+			<artifactId>imagej</artifactId>
 		</dependency>
+		
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-algorithm</artifactId>
@@ -46,22 +103,10 @@
 			<artifactId>Graph_Cut</artifactId>
 			<version>1.0.1</version>
 		</dependency>
+		
 	</dependencies>
-
-
-	<developers>
-		<developer>
-			<name> Benoit Lombardot </name>
-			<organization>Scientific Computing facility, MPI-CBG</organization>
-		</developer>
-	</developers>
-
-	<repositories>
-		<!-- NB: for project parent -->
-		<repository>
-			<id>imagej.public</id>
-			<url>http://maven.imagej.net/content/groups/public</url>
-		</repository>
-	</repositories>
-
+	
+	
+	
 </project>
+
