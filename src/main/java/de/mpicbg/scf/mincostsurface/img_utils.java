@@ -97,7 +97,7 @@ public class img_utils {
 	 * @param ratio the down-sampling factor for each dimension (value should be inferior to 1 for down-sampling)
 	 * @return a down-sampled version of input
 	 */
-	private static < T extends RealType<T> & NumericType< T > & NativeType< T > > Img<T> decimate(Img<T> input, float[] ratio)
+	private static < T extends RealType<T> & NativeType< T > > Img<T> decimate(Img<T> input, float[] ratio)
 	{
 		// create a new image
 		int nDim = input.numDimensions();		
@@ -202,11 +202,11 @@ public class img_utils {
 	 * @param sliceBelow number of slices below the surface defined by the depth map in the output image
 	 * @return
 	 */
-	public static <T extends RealType<T> & NativeType<T> , U extends RealType<U> & NativeType<U>>
+	public static <T extends NumericType<T> & NativeType<T> , U extends RealType<U> >
 	Img<T> ZSurface_reslice(Img<T> input, Img<U> depthMap, int sliceOnTop, int sliceBelow)
 	{
 		RandomAccess< U > depthMapx = Views.extendBorder( depthMap ).randomAccess();
-		RandomAccess< T > inputx = Views.extendBorder( input ).randomAccess();
+		RandomAccess< T > inputx = Views.extendZero( input ).randomAccess();
 		
 		int nDim = input.numDimensions();
 		long[] dims = new long[nDim];
@@ -228,11 +228,16 @@ public class img_utils {
 			z_map = (int) depthMapx.get().getRealFloat();
 			
 			inputx.setPosition(new int[] {tmp_pos[0],tmp_pos[1], tmp_pos[2]-(sliceOnTop) + z_map });
-			excerpt_cursor.get().setReal( inputx.get().getRealFloat() );
+			excerpt_cursor.get().set( inputx.get() );
 		}
 		
 		return excerpt;
 	}
 	
+	
+	// if input is a wrap of an imagePlus and processor has to be generated every time this could get slow
+	
+	
+
 	
 }
