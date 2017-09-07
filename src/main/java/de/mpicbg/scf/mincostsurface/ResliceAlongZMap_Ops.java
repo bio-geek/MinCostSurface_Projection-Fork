@@ -61,10 +61,8 @@ public class ResliceAlongZMap_Ops < T extends NumericType<T> & NativeType< T >, 
     	Img<T> input_img = (Img<T>) input;
     	Img<U> zMap_img = (Img<U>) zMap;
     	
-    	outputExcerpt = img_utils.ZSurface_reslice(input_img, zMap_img, sliceAbove, sliceBelow);
+    	outputExcerpt = img_utils.ZSurface_reslice2(input_img, zMap_img, sliceAbove, sliceBelow);
     	
-    	
-    	//op.morphology().top
     }
 
     

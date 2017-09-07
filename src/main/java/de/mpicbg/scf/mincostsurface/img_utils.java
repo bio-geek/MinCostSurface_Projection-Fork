@@ -173,7 +173,7 @@ public class img_utils {
 			for ( int d = 0; d < nDim; ++d )
                 tmp[ d ] = out_cursor.getFloatPosition(d) /upfactor[d];
 			interpolant.setPosition(tmp);
-			out_cursor.get().setReal( Math.round( interpolant.get().getRealFloat() ) );
+			out_cursor.get().setReal(  interpolant.get().getRealFloat()  );
 		}
 		
 		return output;
@@ -194,6 +194,44 @@ public class img_utils {
 		return upsample( input, out_size, interpType);
 	}
 	
+	
+	public static <T extends NumericType<T> & NativeType<T> , U extends RealType<U> >
+	Img<T> ZSurface_reslice2(Img<T> input, Img<U> depthMap, int sliceOnTop, int sliceBelow)
+	{
+		RandomAccess< U > depthMapx = Views.extendBorder( depthMap ).randomAccess();
+		//RandomAccess< T > inputx = Views.extendZero( input ).randomAccess();
+		
+		NLinearInterpolatorFactory<T> NLinterp_factory = new NLinearInterpolatorFactory<T>();
+		RealRandomAccess< T > inputx_Real = Views.interpolate( Views.extendBorder( input ), NLinterp_factory ).realRandomAccess();
+		
+		
+		int nDim = input.numDimensions();
+		long[] dims = new long[nDim];
+		input.dimensions(dims);
+		long output_height = sliceOnTop + sliceBelow + 1;
+		
+		final ImgFactory< T > imgFactory = new ArrayImgFactory< T >();
+		final Img< T > excerpt = imgFactory.create( new long[] {dims[0],dims[1], output_height} , input.firstElement().createVariable() );
+		Cursor< T > excerpt_cursor = excerpt.localizingCursor();
+
+		
+		int[] tmp_pos = new int[nDim];
+		float z_map;
+		while(excerpt_cursor.hasNext())
+		{
+			excerpt_cursor.fwd();
+			excerpt_cursor.localize(tmp_pos);
+			depthMapx.setPosition(new int[] {tmp_pos[0],tmp_pos[1]});
+			z_map =  depthMapx.get().getRealFloat();
+			
+			inputx_Real.setPosition(new float[] {(float)tmp_pos[0],(float)tmp_pos[1], (float)(tmp_pos[2]-(sliceOnTop)) + z_map });
+			excerpt_cursor.get().set( inputx_Real.get() );
+		}
+		
+		return excerpt;
+	}
+	
+	
 	/**
 	 * 
 	 * @param input a 3D image
@@ -206,7 +244,7 @@ public class img_utils {
 	Img<T> ZSurface_reslice(Img<T> input, Img<U> depthMap, int sliceOnTop, int sliceBelow)
 	{
 		RandomAccess< U > depthMapx = Views.extendBorder( depthMap ).randomAccess();
-		RandomAccess< T > inputx = Views.extendZero( input ).randomAccess();
+		RandomAccess< T > inputx = Views.extendBorder( input ).randomAccess();
 		
 		int nDim = input.numDimensions();
 		long[] dims = new long[nDim];
@@ -234,8 +272,6 @@ public class img_utils {
 		return excerpt;
 	}
 	
-	
-	// if input is a wrap of an imagePlus and processor has to be generated every time this could get slow
 	
 	
 
