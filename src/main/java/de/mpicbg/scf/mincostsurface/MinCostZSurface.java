@@ -77,6 +77,7 @@ public class MinCostZSurface < T extends RealType<T> & NumericType< T > & Native
 	private float maxFlow;
 	
 	
+	
 	public MinCostZSurface()
 	{
 		n_surface = 0;
@@ -85,6 +86,8 @@ public class MinCostZSurface < T extends RealType<T> & NumericType< T > & Native
 		graphs_terminal_weights = new ArrayList<float[][]>();
 		isProcessed = false;
 		maxFlow = 0 ;
+		
+		
 	}
 	
 	
@@ -150,7 +153,11 @@ public class MinCostZSurface < T extends RealType<T> & NumericType< T > & Native
 	
 	
 	
-	
+	public boolean Create_Surface_Graph(Img<T> image_cost, int max_dz)
+	{
+		float factor = 1f;
+		return Create_Surface_Graph( image_cost, max_dz, factor);
+	}
 	
 	
 	/**
@@ -158,8 +165,9 @@ public class MinCostZSurface < T extends RealType<T> & NumericType< T > & Native
 	 * 
 	 * @param image_cost cost function 
 	 * @param max_dz maximum altitude variation between 2 pixels
+	 * @param factor positive multiplicative value to make intensity in both surfaces look similar
 	 */
-	public boolean Create_Surface_Graph(Img<T> image_cost, int max_dz)
+	public boolean Create_Surface_Graph(Img<T> image_cost, int max_dz, float factor)
 	{
 		/////////////////////////////////////////////
 		// Check input validity /////////////////////
@@ -245,7 +253,7 @@ public class MinCostZSurface < T extends RealType<T> & NumericType< T > & Native
 		while ( image_cursor.hasNext() )
         {	
 			image_cursor.fwd();
-			w = image_cursor.get().getRealFloat();
+			w = factor * image_cursor.get().getRealFloat();
 			image_cursor.localize(position);
 			long posIdx = position[0]+ position[1]*Width + position[2]*Slice;
 			current_offset = (n_surface)*nNodes_perSurf + posIdx;
@@ -265,7 +273,7 @@ public class MinCostZSurface < T extends RealType<T> & NumericType< T > & Native
 					Edges_weights[1][EdgeCount] = zeroWeight;
 					EdgeCount++;
 				}
-				w -= imagex.get().getRealFloat();
+				w -= factor * imagex.get().getRealFloat();
 			}
 			else if (position[2]>0)
 			{	
@@ -277,7 +285,7 @@ public class MinCostZSurface < T extends RealType<T> & NumericType< T > & Native
 				EdgeCount++;
 				
 				imagex.move(new int[] {0,0,-1}); // no need to test for out of bound here
-				w -= imagex.get().getRealFloat();
+				w -= factor * imagex.get().getRealFloat();
 			}
 			else
 				w = -infiniteWeight;
@@ -305,6 +313,7 @@ public class MinCostZSurface < T extends RealType<T> & NumericType< T > & Native
 		// increment the number of surface set and return success of the operation
 		n_surface++;
 
+		
 		return true;
 	}
 	
@@ -465,6 +474,8 @@ public class MinCostZSurface < T extends RealType<T> & NumericType< T > & Native
 		return true;
 		
 	}
+	
+	
 	
 	
 	///////////////////////////////////////////////////////////////////////////////////////////

@@ -45,6 +45,8 @@ public class MinCost2ZSurface_Ops < T extends RealType<T> & NativeType< T > > ex
     @Parameter ( label = "Max_delta_z between adjacent voxel" ) // constraint on the surface altitude change from one pixel to another
     private int max_dz;
     
+    @Parameter ( label = "relative weight", required=false, persist=false ) // multiplicative factor that balance the intensity in both surfaces allowing better detection 
+    private float relativeIntensity = 1f ;
     
     // parameter for the use case with 2 surfaces detection
    	
@@ -114,7 +116,7 @@ public class MinCost2ZSurface_Ops < T extends RealType<T> & NativeType< T > > ex
 		start = System.currentTimeMillis();
 		
 		ZSurface_detector.Create_Surface_Graph(image_cost_ds, max_dz);
-		ZSurface_detector.Create_Surface_Graph(image_cost_ds, max_dz);
+		ZSurface_detector.Create_Surface_Graph(image_cost_ds, max_dz, relativeIntensity);
 		ZSurface_detector.Add_NoCrossing_Constraint_Between_Surfaces(1, 2, min_dist, max_dist);
 		
 		end = System.currentTimeMillis();
