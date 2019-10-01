@@ -136,6 +136,7 @@ public class img_utils {
 		if(nDim != out_size.length)
 		{
 			//print("upsampling error: the new size and input have a different number of dimension");
+			System.err.println("upsampling error: the new size and input have a different number of dimension");
 			return input;
 		}
 		long[] in_size = new long[nDim];
