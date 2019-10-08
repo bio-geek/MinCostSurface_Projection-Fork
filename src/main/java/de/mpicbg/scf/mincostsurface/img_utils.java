@@ -1,6 +1,7 @@
 package de.mpicbg.scf.mincostsurface;
 
 
+import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
@@ -9,6 +10,7 @@ import net.imglib2.Interval;
 import net.imglib2.RandomAccess;
 import net.imglib2.RealRandomAccess;
 import net.imglib2.util.Intervals;
+import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 import net.imglib2.algorithm.gauss3.Gauss3;
 import net.imglib2.exception.IncompatibleTypeException;
@@ -229,6 +231,134 @@ public class img_utils {
 			excerpt_cursor.get().set( inputx_Real.get() );
 		}
 		
+		return excerpt;
+	}
+
+	public static <T extends NumericType<T> & NativeType<T> , U extends RealType<U> >
+	Img<T> ZSurface_reslice3(Img<T> input, Img<U> depthMap, int sliceOnTop, int sliceBelow, int numThreads)
+	{
+		final long[][] inputOffset = new long[ numThreads ][input.numDimensions()];
+
+		for ( int d = 0; d < inputOffset.length; d++ )
+		{
+			inputOffset[d] = new long[input.numDimensions()];
+
+			for (int i = 0; i < inputOffset[d].length; i++) {
+				inputOffset[d][i] = 0;
+			}
+			// width
+//            offset[d][0] = inputSource.dimension( 0 ) / numThreads * d;
+			// height
+			inputOffset[d][1] = input.dimension( 1 ) / numThreads * d;
+			// depth
+//            offset[d][2] = 0;
+		}
+
+		int nDim = input.numDimensions();
+		long[] dims = new long[nDim];
+		input.dimensions(dims);
+		long output_height = sliceOnTop + sliceBelow + 1;
+
+		final ImgFactory< T > imgFactory = new ArrayImgFactory< T >();
+		final Img< T > excerpt = imgFactory.create( new long[] {dims[0],dims[1], output_height} , input.firstElement().createVariable() );
+
+		final long[][] offset = new long[ numThreads ][excerpt.numDimensions()];
+
+		for ( int d = 0; d < offset.length; d++ )
+		{
+			offset[d] = new long[excerpt.numDimensions()];
+
+			for (int i = 0; i < offset[d].length; i++) {
+				offset[d][i] = 0;
+			}
+			// width
+//            offset[d][0] = inputSource.dimension( 0 ) / numThreads * d;
+			// height
+			offset[d][1] = excerpt.dimension( 1 ) / numThreads * d;
+			// depth
+//            offset[d][2] = 0;
+		}
+
+		final long[][] depthMapOffset = new long[ numThreads ][depthMap.numDimensions()];
+		long unit = excerpt.dimension( 1 ) / numThreads;
+		for ( int d = 0; d < depthMapOffset.length; d++ )
+		{
+			depthMapOffset[d] = new long[depthMap.numDimensions()];
+
+			for (int i = 0; i < depthMapOffset[d].length; i++) {
+				depthMapOffset[d][i] = 0;
+			}
+
+			depthMapOffset[d][1] = unit * d;
+		}
+
+		NLinearInterpolatorFactory<T> NLinterp_factory = new NLinearInterpolatorFactory<T>();
+		final Thread[] threads = SimpleMultiThreading.newThreads( numThreads );
+		for ( int i = 0; i < threads.length; i++ )
+		{
+			int finalI = i;
+			threads[ i ] = new Thread( "ZSurface Reslice thread " + finalI)
+			{
+				@Override
+				public void run()
+				{
+					long[] max = new long[excerpt.numDimensions()];
+
+					for(int i = 0; i < excerpt.numDimensions(); i++) {
+						max[i] = excerpt.dimension(i);
+					}
+
+					max[1] = unit;
+
+					IntervalView< T > excerptIntervalView = Views.offsetInterval(excerpt, offset[finalI], max);
+					RandomAccess< T > randomAccess = excerptIntervalView.randomAccess();
+					Cursor< T > excerpt_cursor = excerptIntervalView.cursor();
+
+					max = new long[input.numDimensions()];
+
+					for(int i = 0; i < input.numDimensions(); i++) {
+						max[i] = input.dimension(i);
+					}
+
+					max[1] = unit;
+
+					IntervalView< T > intervalView = Views.offsetInterval(input, inputOffset[finalI], max);
+					RealRandomAccess< T > inputx_Real = Views.interpolate( Views.extendBorder( intervalView ), NLinterp_factory ).realRandomAccess();
+
+					max = new long[depthMap.numDimensions()];
+
+					for(int i = 0; i < depthMap.numDimensions(); i++) {
+						max[i] = depthMap.dimension(i);
+					}
+
+					max[1] = unit;
+
+					IntervalView< U > depthMapIntervalView = Views.offsetInterval(depthMap, depthMapOffset[finalI], max);
+					RandomAccess< U > depthMapx = depthMapIntervalView.randomAccess();
+
+					float z_map;
+					int[] tmp_pos = new int[nDim];
+
+					while(excerpt_cursor.hasNext())
+					{
+						excerpt_cursor.fwd();
+						excerpt_cursor.localize(tmp_pos);
+						depthMapx.setPosition(new int[] {tmp_pos[0],tmp_pos[1]});
+						z_map =  depthMapx.get().getRealFloat();
+
+						inputx_Real.setPosition(new float[] {(float)tmp_pos[0],(float)tmp_pos[1], (float)(tmp_pos[2]-(sliceOnTop)) + z_map });
+						randomAccess.setPosition(excerpt_cursor);
+//						try {
+							randomAccess.get().set( inputx_Real.get() );
+//						} catch (java.lang.ArrayIndexOutOfBoundsException e) {
+//							continue;
+//						}
+					}
+				}
+			};
+		}
+
+		SimpleMultiThreading.startAndJoin( threads );
 		return excerpt;
 	}
 	
