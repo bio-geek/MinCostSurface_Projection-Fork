@@ -30,7 +30,7 @@ import java.io.File;
 
 //@Plugin(type = Command.class, menuPath = "Plugins>Z map reslice")
 
-@Plugin(type = Op.class, name="zMapReslice", headless = true, label="zMapReslice", visible=true, menuPath = "Plugins>Z map reslice")
+@Plugin(type = Op.class, name="zMapReslice", headless = true, label="zMapReslice", visible=true, menuPath = "Plugins>Z map reslice>Single Thread")
 public class ResliceAlongZMap_Ops < T extends NumericType<T> & NativeType< T >, U extends RealType<U> > extends AbstractOp {
     
 

@@ -23,7 +23,7 @@ import org.scijava.plugin.Plugin;
 import java.io.File;
 
 
-@Plugin(type = Op.class, menuPath = "Plugins>MinCostZSurface", name="MinCostZSurface", headless = true, label="MinCostZSurface")
+@Plugin(type = Op.class, menuPath = "Plugins>MinCostZSurface>Single Thread", name="MinCostZSurface", headless = true, label="MinCostZSurface")
 public class MinCostZSurface_Ops< T extends RealType<T> & NativeType< T > > extends AbstractOp {
     //
     // should implement ops if I want to benefit the matching mechanism

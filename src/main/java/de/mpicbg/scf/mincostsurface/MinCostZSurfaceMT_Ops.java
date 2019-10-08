@@ -30,7 +30,7 @@ import java.io.File;
  * This class is not necessary as a single thread can deal with it in a fairly fast way.
  * Caution: too many threads gives an error as well.
  */
-@Plugin(type = Op.class, menuPath = "Plugins>MinCostZSurfaceMT", name="MinCostZSurfaceMT", headless = true, label="MinCostZSurfaceMT")
+@Plugin(type = Op.class, menuPath = "Plugins>MinCostZSurface>Multi Threads", name="MinCostZSurfaceMT", headless = true, label="MinCostZSurfaceMT")
 public class MinCostZSurfaceMT_Ops< T extends RealType<T> & NativeType< T >> extends AbstractOp {
     //
     // should implement ops if I want to benefit the matching mechanism
@@ -239,9 +239,8 @@ public class MinCostZSurfaceMT_Ops< T extends RealType<T> & NativeType< T >> ext
         ij.ui().showUI();
 
         // ask the user for a file to open
-//        final File file = ij.ui().chooseFile(null, "open");
+        final File file = ij.ui().chooseFile(null, "open");
 
-        final File file = new File("/Users/moon/temp/20190129_wingsdic_400nm20E_upcrawl_000-z1-z213.tif");
         if (file != null) {
             // load the dataset
             final Dataset dataset = ij.scifio().datasetIO().open(file.getPath());

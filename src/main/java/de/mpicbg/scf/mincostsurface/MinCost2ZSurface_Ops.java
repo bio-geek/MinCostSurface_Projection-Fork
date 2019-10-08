@@ -22,7 +22,7 @@ import org.scijava.plugin.Plugin;
 import java.io.File;
 
 
-@Plugin(type = Op.class, menuPath = "Plugins>MinCost2ZSurface", name="MinCost2ZSurface", headless = true, label="MinCost2ZSurface")
+@Plugin(type = Op.class, menuPath = "Plugins>MinCost2ZSurface>Single Thread", name="MinCost2ZSurface", headless = true, label="MinCost2ZSurface")
 public class MinCost2ZSurface_Ops < T extends RealType<T> & NativeType< T > > extends AbstractOp {
     //
     // should implement Map if I want to benefit the ops matching

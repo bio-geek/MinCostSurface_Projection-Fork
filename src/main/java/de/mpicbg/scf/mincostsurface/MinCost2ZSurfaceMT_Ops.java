@@ -29,7 +29,7 @@ import java.io.File;
  *
  * The image chunks are made by height / numThreads. Each chunk is processed in MinCostZSurface class
  */
-@Plugin(type = Op.class, menuPath = "Plugins>MinCost2ZSurfaceMT", name = "MinCost2ZSurfaceMT", headless = true, label = "MinCost2ZSurfaceMT")
+@Plugin(type = Op.class, menuPath = "Plugins>MinCost2ZSurface>Multi Threads", name = "MinCost2ZSurfaceMT", headless = true, label = "MinCost2ZSurfaceMT")
 public class MinCost2ZSurfaceMT_Ops<T extends RealType<T> & NativeType<T>> extends AbstractOp {
     //
     // should implement Map if I want to benefit the ops matching
