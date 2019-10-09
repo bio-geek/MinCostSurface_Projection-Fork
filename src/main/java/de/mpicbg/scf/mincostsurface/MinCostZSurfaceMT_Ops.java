@@ -21,6 +21,8 @@ import org.scijava.plugin.Plugin;
 
 import java.io.File;
 
+import static de.mpicbg.scf.mincostsurface.img_utils.createOffset;
+
 /**
  * Author: HongKee Moon (moon@mpi-cbg.de), Scientific Computing Facility
  * Organization: MPI-CBG Dresden
@@ -107,6 +109,10 @@ public class MinCostZSurfaceMT_Ops< T extends RealType<T> & NativeType< T >> ext
 
         image_cost_ds.dimensions(dims);
 
+        if(dims[1] < numThreads) {
+            numThreads = (int) dims[1];
+        }
+
 //        dims[0] = image_cost_ds.dimension(0);
         dims[1] = image_cost_ds.dimension(1) / numThreads;
 
@@ -138,22 +144,24 @@ public class MinCostZSurfaceMT_Ops< T extends RealType<T> & NativeType< T >> ext
 
     < T extends RealType< T >> Img< T > processMT(final Img< T > inputSource, final Interval interval, final int numThreads )
     {
-        final long[][] offset = new long[ numThreads ][inputSource.numDimensions()];
+        final long[][] offset = createOffset(inputSource, numThreads);
 
-        for ( int d = 0; d < offset.length; d++ )
-        {
-            offset[d] = new long[inputSource.numDimensions()];
-
-            for (int i = 0; i < offset[d].length; i++) {
-                offset[d][i] = 0;
-            }
-            // width
-//            offset[d][0] = inputSource.dimension( 0 ) / numThreads * d;
-            // height
-            offset[d][1] = inputSource.dimension( 1 ) / numThreads * d;
-            // depth
-//            offset[d][2] = 0;
-        }
+//        final long[][] offset = new long[ numThreads ][inputSource.numDimensions()];
+//
+//        for ( int d = 0; d < offset.length; d++ )
+//        {
+//            offset[d] = new long[inputSource.numDimensions()];
+//
+//            for (int i = 0; i < offset[d].length; i++) {
+//                offset[d][i] = 0;
+//            }
+//            // width
+////            offset[d][0] = inputSource.dimension( 0 ) / numThreads * d;
+//            // height
+//            offset[d][1] = inputSource.dimension( 1 ) / numThreads * d;
+//            // depth
+////            offset[d][2] = 0;
+//        }
 
         final Img< T > globalDepthMap = inputSource.factory().create(inputSource.dimension(0), inputSource.dimension(1));
 
