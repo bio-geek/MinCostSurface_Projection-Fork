@@ -261,14 +261,14 @@ public class img_utils {
 				@Override
 				public void run()
 				{
-					IntervalView< T > excerptIntervalView = createIntervaView(excerpt, offset[finalI], unit);
+					IntervalView< T > excerptIntervalView = createIntervalView(excerpt, offset[finalI], unit);
 					RandomAccess< T > randomAccess = excerptIntervalView.randomAccess();
 					Cursor< T > excerpt_cursor = excerptIntervalView.cursor();
 
-					IntervalView< T > intervalView = createIntervaView(input, inputOffset[finalI], unit);
+					IntervalView< T > intervalView = createIntervalView(input, inputOffset[finalI], unit);
 					RealRandomAccess< T > inputx_Real = Views.interpolate( Views.extendBorder( intervalView ), NLinterp_factory ).realRandomAccess();
 
-					IntervalView< U > depthMapIntervalView = createIntervaView(depthMap, depthMapOffset[finalI], unit);
+					IntervalView< U > depthMapIntervalView = createIntervalView(depthMap, depthMapOffset[finalI], unit);
 					RandomAccess< U > depthMapx = depthMapIntervalView.randomAccess();
 
 					float z_map;
@@ -293,7 +293,7 @@ public class img_utils {
 		return excerpt;
 	}
 
-	static <T> IntervalView<T> createIntervaView(Img<T> img, long[] offset, long unit) {
+	private static <T> IntervalView<T> createIntervalView(Img<T> img, long[] offset, long unit) {
 		long[] max = new long[img.numDimensions()];
 		img.dimensions(max);
 		max[1] = unit;
