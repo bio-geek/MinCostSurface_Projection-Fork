@@ -20,7 +20,6 @@ import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.interpolation.randomaccess.LanczosInterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
-//import ij.IJ;
 
 // Todo: add the volume reslice
 
@@ -237,22 +236,7 @@ public class img_utils {
 	public static <T extends NumericType<T> & NativeType<T> , U extends RealType<U> >
 	Img<T> ZSurface_reslice3(Img<T> input, Img<U> depthMap, int sliceOnTop, int sliceBelow, int numThreads)
 	{
-		final long[][] inputOffset = new long[ numThreads ][input.numDimensions()];
-
-		for ( int d = 0; d < inputOffset.length; d++ )
-		{
-			inputOffset[d] = new long[input.numDimensions()];
-
-			for (int i = 0; i < inputOffset[d].length; i++) {
-				inputOffset[d][i] = 0;
-			}
-			// width
-//            offset[d][0] = inputSource.dimension( 0 ) / numThreads * d;
-			// height
-			inputOffset[d][1] = input.dimension( 1 ) / numThreads * d;
-			// depth
-//            offset[d][2] = 0;
-		}
+		final long[][] inputOffset = createOffset(input, numThreads);
 
 		int nDim = input.numDimensions();
 		long[] dims = new long[nDim];
@@ -261,36 +245,11 @@ public class img_utils {
 
 		final ImgFactory< T > imgFactory = new ArrayImgFactory< T >();
 		final Img< T > excerpt = imgFactory.create( new long[] {dims[0],dims[1], output_height} , input.firstElement().createVariable() );
+		long unit = dims[1] / numThreads;
 
-		final long[][] offset = new long[ numThreads ][excerpt.numDimensions()];
+		final long[][] offset = createOffset(excerpt, numThreads);
 
-		for ( int d = 0; d < offset.length; d++ )
-		{
-			offset[d] = new long[excerpt.numDimensions()];
-
-			for (int i = 0; i < offset[d].length; i++) {
-				offset[d][i] = 0;
-			}
-			// width
-//            offset[d][0] = inputSource.dimension( 0 ) / numThreads * d;
-			// height
-			offset[d][1] = excerpt.dimension( 1 ) / numThreads * d;
-			// depth
-//            offset[d][2] = 0;
-		}
-
-		final long[][] depthMapOffset = new long[ numThreads ][depthMap.numDimensions()];
-		long unit = excerpt.dimension( 1 ) / numThreads;
-		for ( int d = 0; d < depthMapOffset.length; d++ )
-		{
-			depthMapOffset[d] = new long[depthMap.numDimensions()];
-
-			for (int i = 0; i < depthMapOffset[d].length; i++) {
-				depthMapOffset[d][i] = 0;
-			}
-
-			depthMapOffset[d][1] = unit * d;
-		}
+		final long[][] depthMapOffset = createOffset(depthMap, numThreads);
 
 		NLinearInterpolatorFactory<T> NLinterp_factory = new NLinearInterpolatorFactory<T>();
 		final Thread[] threads = SimpleMultiThreading.newThreads( numThreads );
@@ -302,38 +261,14 @@ public class img_utils {
 				@Override
 				public void run()
 				{
-					long[] max = new long[excerpt.numDimensions()];
-
-					for(int i = 0; i < excerpt.numDimensions(); i++) {
-						max[i] = excerpt.dimension(i);
-					}
-
-					max[1] = unit;
-
-					IntervalView< T > excerptIntervalView = Views.offsetInterval(excerpt, offset[finalI], max);
+					IntervalView< T > excerptIntervalView = createIntervaView(excerpt, offset[finalI], unit);
 					RandomAccess< T > randomAccess = excerptIntervalView.randomAccess();
 					Cursor< T > excerpt_cursor = excerptIntervalView.cursor();
 
-					max = new long[input.numDimensions()];
-
-					for(int i = 0; i < input.numDimensions(); i++) {
-						max[i] = input.dimension(i);
-					}
-
-					max[1] = unit;
-
-					IntervalView< T > intervalView = Views.offsetInterval(input, inputOffset[finalI], max);
+					IntervalView< T > intervalView = createIntervaView(input, inputOffset[finalI], unit);
 					RealRandomAccess< T > inputx_Real = Views.interpolate( Views.extendBorder( intervalView ), NLinterp_factory ).realRandomAccess();
 
-					max = new long[depthMap.numDimensions()];
-
-					for(int i = 0; i < depthMap.numDimensions(); i++) {
-						max[i] = depthMap.dimension(i);
-					}
-
-					max[1] = unit;
-
-					IntervalView< U > depthMapIntervalView = Views.offsetInterval(depthMap, depthMapOffset[finalI], max);
+					IntervalView< U > depthMapIntervalView = createIntervaView(depthMap, depthMapOffset[finalI], unit);
 					RandomAccess< U > depthMapx = depthMapIntervalView.randomAccess();
 
 					float z_map;
@@ -348,11 +283,7 @@ public class img_utils {
 
 						inputx_Real.setPosition(new float[] {(float)tmp_pos[0],(float)tmp_pos[1], (float)(tmp_pos[2]-(sliceOnTop)) + z_map });
 						randomAccess.setPosition(excerpt_cursor);
-//						try {
-							randomAccess.get().set( inputx_Real.get() );
-//						} catch (java.lang.ArrayIndexOutOfBoundsException e) {
-//							continue;
-//						}
+						randomAccess.get().set( inputx_Real.get() );
 					}
 				}
 			};
@@ -361,8 +292,32 @@ public class img_utils {
 		SimpleMultiThreading.startAndJoin( threads );
 		return excerpt;
 	}
-	
-	
+
+	static <T> IntervalView<T> createIntervaView(Img<T> img, long[] offset, long unit) {
+		long[] max = new long[img.numDimensions()];
+		img.dimensions(max);
+		max[1] = unit;
+
+		return Views.offsetInterval(img, offset, max);
+	}
+
+	static long[][] createOffset(Img img, int numThreads) {
+		final long[][] offset = new long[ numThreads ][img.numDimensions()];
+
+		for ( int d = 0; d < offset.length; d++ )
+		{
+			offset[d] = new long[img.numDimensions()];
+
+			for (int i = 0; i < offset[d].length; i++) {
+				offset[d][i] = 0;
+			}
+			// height
+			offset[d][1] = img.dimension( 1 ) / numThreads * d;
+		}
+		return offset;
+	}
+
+
 	/**
 	 * 
 	 * @param input a 3D image
