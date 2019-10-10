@@ -146,23 +146,6 @@ public class MinCostZSurfaceMT_Ops< T extends RealType<T> & NativeType< T >> ext
     {
         final long[][] offset = createOffset(inputSource, numThreads);
 
-//        final long[][] offset = new long[ numThreads ][inputSource.numDimensions()];
-//
-//        for ( int d = 0; d < offset.length; d++ )
-//        {
-//            offset[d] = new long[inputSource.numDimensions()];
-//
-//            for (int i = 0; i < offset[d].length; i++) {
-//                offset[d][i] = 0;
-//            }
-//            // width
-////            offset[d][0] = inputSource.dimension( 0 ) / numThreads * d;
-//            // height
-//            offset[d][1] = inputSource.dimension( 1 ) / numThreads * d;
-//            // depth
-////            offset[d][2] = 0;
-//        }
-
         final Img< T > globalDepthMap = inputSource.factory().create(inputSource.dimension(0), inputSource.dimension(1));
 
         final Thread[] threads = SimpleMultiThreading.newThreads( numThreads );
