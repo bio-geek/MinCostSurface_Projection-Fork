@@ -6,6 +6,7 @@ import net.imagej.ops.AbstractOp;
 import net.imagej.ops.Op;
 import net.imglib2.*;
 import net.imglib2.img.Img;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
@@ -102,21 +103,28 @@ public class MinCost2ZSurfaceMT_Ops<T extends RealType<T> & NativeType<T>> exten
         Img<T> image_cost_ds = img_utils.downsample(image_cost_orig, new float[]{downsample_factor_xy, downsample_factor_xy, downsample_factor_z});
 
         final long[] dims = new long[image_cost_ds.numDimensions()];
+        final long[] lastDims = new long[image_cost_ds.numDimensions()];
 
         image_cost_ds.dimensions(dims);
+        image_cost_ds.dimensions(lastDims);
 
-        if(dims[1] < numThreads) {
+        if(dims[1] < numThreads || numThreads < 0) {
             numThreads = (int) dims[1];
         }
+
+//        System.out.println("Height: " + dims[1]);
 
         // Setup the number of dimension in the input image except the height part
         // The height will be the original height divided by the number of threads
         dims[1] = image_cost_ds.dimension(1) / numThreads;
 
+        lastDims[1] = image_cost_ds.dimension(1) - dims[1] * (numThreads - 1);
         FinalInterval interval = new FinalInterval(dims);
+        FinalInterval lastInterval = new FinalInterval(lastDims);
 
         // Call the Multi threaded process
-        Img<T>[] depth_map = processMT(image_cost_ds, interval, numThreads);
+//        Img<T>[] depth_map = processMT(image_cost_ds, interval, numThreads);
+        Img<T>[] depth_map = processMT(image_cost_ds, interval, lastInterval, numThreads);
 
         // The returned depth map array
         final Img<T> depth_map1 = depth_map[0];
@@ -138,14 +146,15 @@ public class MinCost2ZSurfaceMT_Ops<T extends RealType<T> & NativeType<T>> exten
             up_map_cursor2.next().mul(1 / downsample_factor_z);
         }
 
-//        ImageJFunctions.show(upsampled_depthMap1);
-//        ImageJFunctions.show(upsampled_depthMap2);
+//        ImageJFunctions.show(upsampled_depthMap1,"altitude map1");
+//        ImageJFunctions.show(upsampled_depthMap2,"altitude map2" );
 
         System.out.println("processing done");
     }
 
 
-    <T extends RealType<T> & NativeType<T>> Img<T>[] processMT(final Img<T> inputSource, final Interval interval, final int numThreads) {
+    <T extends RealType<T> & NativeType<T>> Img<T>[] processMT(final Img<T> inputSource, Interval interval, final Interval lastInterval, final int numThreads) {
+//    <T extends RealType<T> & NativeType<T>> Img<T>[] processMT(final Img<T> inputSource, final Interval interval, final int numThreads) {
 
         // Setup the offset arrays for multi threads
         final long[][] offset = createOffset(inputSource, numThreads);
@@ -164,8 +173,12 @@ public class MinCost2ZSurfaceMT_Ops<T extends RealType<T> & NativeType<T>> exten
                     // Setup the IntervalView of the original image
                     IntervalView<T> intervalView = Views.offset(inputSource, offset[finalI]);
                     // Setup the chunk for each thread
-                    final Img<T> chunk = inputSource.factory().create(interval);
-                    Cursor<T> cursor = chunk.cursor();
+//                    Img<T> chunk = inputSource.factory().create(interval);
+                    Img<T> chunk;
+                    if(finalI == (threads.length - 1)) chunk = inputSource.factory().create(lastInterval);
+                    else chunk = inputSource.factory().create(interval);
+
+                    Cursor<T> cursor = chunk.localizingCursor();
                     RandomAccess<T> randomAccess = intervalView.randomAccess();
 
                     // Copy the original values to the chunk
@@ -226,17 +239,13 @@ public class MinCost2ZSurfaceMT_Ops<T extends RealType<T> & NativeType<T>> exten
 
                     // Copy the values from the chunk to the global maps
                     while (cursorDepthMap1.hasNext()) {
-                        try {
-                            cursorDepthMap1.fwd();
-                            randomAccess1.setPosition(cursorDepthMap1);
-                            randomAccess1.get().setReal(cursorDepthMap1.get().getRealFloat());
+                        cursorDepthMap1.fwd();
+                        randomAccess1.setPosition(cursorDepthMap1);
+                        randomAccess1.get().setReal(cursorDepthMap1.get().getRealFloat());
 
-                            cursorDepthMap2.fwd();
-                            randomAccess2.setPosition(cursorDepthMap2);
-                            randomAccess2.get().setReal(cursorDepthMap2.get().getRealFloat());
-                        } catch (java.lang.ArrayIndexOutOfBoundsException e) {
-                            continue;
-                        }
+                        cursorDepthMap2.fwd();
+                        randomAccess2.setPosition(cursorDepthMap2);
+                        randomAccess2.get().setReal(cursorDepthMap2.get().getRealFloat());
                     }
                 }
             };

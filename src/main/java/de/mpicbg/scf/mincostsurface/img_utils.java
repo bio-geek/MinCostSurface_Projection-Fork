@@ -265,10 +265,10 @@ public class img_utils {
 					RandomAccess< T > randomAccess = excerptIntervalView.randomAccess();
 					Cursor< T > excerpt_cursor = excerptIntervalView.cursor();
 
-					IntervalView< T > intervalView = createIntervalView(input, inputOffset[finalI], unit);
+					IntervalView< T > intervalView = Views.offset( input, inputOffset[finalI] );
 					RealRandomAccess< T > inputx_Real = Views.interpolate( Views.extendBorder( intervalView ), NLinterp_factory ).realRandomAccess();
 
-					IntervalView< U > depthMapIntervalView = createIntervalView(depthMap, depthMapOffset[finalI], unit);
+					IntervalView< U > depthMapIntervalView = Views.offset(depthMap, depthMapOffset[finalI] );
 					RandomAccess< U > depthMapx = depthMapIntervalView.randomAccess();
 
 					float z_map;
@@ -298,11 +298,16 @@ public class img_utils {
 		img.dimensions(max);
 		max[1] = unit;
 
+		if( (offset[1] + unit) > img.dimension(1) ) {
+			max[1] = img.dimension(1) - unit * (offset.length - 1);
+			System.out.println(max[1]);
+		}
+
 		return Views.offsetInterval(img, offset, max);
 	}
 
 	static long[][] createOffset(Img img, int numThreads) {
-		final long[][] offset = new long[ numThreads ][img.numDimensions()];
+		final long[][] offset = new long[ numThreads ][ img.numDimensions() ];
 
 		for ( int d = 0; d < offset.length; d++ )
 		{

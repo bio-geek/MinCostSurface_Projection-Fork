@@ -9,6 +9,7 @@ import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccess;
 import net.imglib2.img.Img;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
@@ -109,7 +110,7 @@ public class MinCostZSurfaceMT_Ops< T extends RealType<T> & NativeType< T >> ext
 
         image_cost_ds.dimensions(dims);
 
-        if(dims[1] < numThreads) {
+        if(dims[1] < numThreads || numThreads < 0) {
             numThreads = (int) dims[1];
         }
 
@@ -129,7 +130,7 @@ public class MinCostZSurfaceMT_Ops< T extends RealType<T> & NativeType< T >> ext
         while(up_map_cursor.hasNext())
             up_map_cursor.next().mul(1/ downsample_factor_z);
 
-        //ImageJFunctions.show( upsampled_depthMap, "altitude map" );
+//        ImageJFunctions.show( upsampled_depthMap, "altitude map" );
 
 
 
@@ -205,13 +206,9 @@ public class MinCostZSurfaceMT_Ops< T extends RealType<T> & NativeType< T >> ext
                     randomAccess = intervalView.randomAccess();
                     while(cursorDepthMap.hasNext())
                     {
-                        try {
-                            cursorDepthMap.fwd();
-                            randomAccess.setPosition( cursorDepthMap );
-                            randomAccess.get().setReal( cursorDepthMap.get().getRealFloat() );
-                        } catch (java.lang.ArrayIndexOutOfBoundsException e) {
-                            continue;
-                        }
+                        cursorDepthMap.fwd();
+                        randomAccess.setPosition( cursorDepthMap );
+                        randomAccess.get().setReal( cursorDepthMap.get().getRealFloat() );
                     }
                 }
             };
