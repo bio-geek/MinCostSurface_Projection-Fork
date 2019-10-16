@@ -9,6 +9,7 @@ import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccess;
 import net.imglib2.img.Img;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
@@ -21,6 +22,8 @@ import org.scijava.plugin.Plugin;
 
 import java.io.File;
 
+import static de.mpicbg.scf.mincostsurface.img_utils.createOffset;
+
 /**
  * Author: HongKee Moon (moon@mpi-cbg.de), Scientific Computing Facility
  * Organization: MPI-CBG Dresden
@@ -30,7 +33,7 @@ import java.io.File;
  * This class is not necessary as a single thread can deal with it in a fairly fast way.
  * Caution: too many threads gives an error as well.
  */
-@Plugin(type = Op.class, menuPath = "Plugins>MinCostZSurfaceMT", name="MinCostZSurfaceMT", headless = true, label="MinCostZSurfaceMT")
+@Plugin(type = Op.class, menuPath = "Plugins>MinCostZSurface>Multi Threads", name="MinCostZSurfaceMT", headless = true, label="MinCostZSurfaceMT")
 public class MinCostZSurfaceMT_Ops< T extends RealType<T> & NativeType< T >> extends AbstractOp {
     //
     // should implement ops if I want to benefit the matching mechanism
@@ -107,6 +110,10 @@ public class MinCostZSurfaceMT_Ops< T extends RealType<T> & NativeType< T >> ext
 
         image_cost_ds.dimensions(dims);
 
+        if(dims[1] < numThreads || numThreads < 0) {
+            numThreads = (int) dims[1];
+        }
+
 //        dims[0] = image_cost_ds.dimension(0);
         dims[1] = image_cost_ds.dimension(1) / numThreads;
 
@@ -123,7 +130,7 @@ public class MinCostZSurfaceMT_Ops< T extends RealType<T> & NativeType< T >> ext
         while(up_map_cursor.hasNext())
             up_map_cursor.next().mul(1/ downsample_factor_z);
 
-        //ImageJFunctions.show( upsampled_depthMap, "altitude map" );
+//        ImageJFunctions.show( upsampled_depthMap, "altitude map" );
 
 
 
@@ -138,22 +145,7 @@ public class MinCostZSurfaceMT_Ops< T extends RealType<T> & NativeType< T >> ext
 
     < T extends RealType< T >> Img< T > processMT(final Img< T > inputSource, final Interval interval, final int numThreads )
     {
-        final long[][] offset = new long[ numThreads ][inputSource.numDimensions()];
-
-        for ( int d = 0; d < offset.length; d++ )
-        {
-            offset[d] = new long[inputSource.numDimensions()];
-
-            for (int i = 0; i < offset[d].length; i++) {
-                offset[d][i] = 0;
-            }
-            // width
-//            offset[d][0] = inputSource.dimension( 0 ) / numThreads * d;
-            // height
-            offset[d][1] = inputSource.dimension( 1 ) / numThreads * d;
-            // depth
-//            offset[d][2] = 0;
-        }
+        final long[][] offset = createOffset(inputSource, numThreads);
 
         final Img< T > globalDepthMap = inputSource.factory().create(inputSource.dimension(0), inputSource.dimension(1));
 
@@ -214,13 +206,9 @@ public class MinCostZSurfaceMT_Ops< T extends RealType<T> & NativeType< T >> ext
                     randomAccess = intervalView.randomAccess();
                     while(cursorDepthMap.hasNext())
                     {
-                        try {
-                            cursorDepthMap.fwd();
-                            randomAccess.setPosition( cursorDepthMap );
-                            randomAccess.get().setReal( cursorDepthMap.get().getRealFloat() );
-                        } catch (java.lang.ArrayIndexOutOfBoundsException e) {
-                            continue;
-                        }
+                        cursorDepthMap.fwd();
+                        randomAccess.setPosition( cursorDepthMap );
+                        randomAccess.get().setReal( cursorDepthMap.get().getRealFloat() );
                     }
                 }
             };
@@ -239,9 +227,8 @@ public class MinCostZSurfaceMT_Ops< T extends RealType<T> & NativeType< T >> ext
         ij.ui().showUI();
 
         // ask the user for a file to open
-//        final File file = ij.ui().chooseFile(null, "open");
+        final File file = ij.ui().chooseFile(null, "open");
 
-        final File file = new File("/Users/moon/temp/20190129_wingsdic_400nm20E_upcrawl_000-z1-z213.tif");
         if (file != null) {
             // load the dataset
             final Dataset dataset = ij.scifio().datasetIO().open(file.getPath());

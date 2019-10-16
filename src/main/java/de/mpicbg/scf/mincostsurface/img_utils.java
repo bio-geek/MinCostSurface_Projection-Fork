@@ -1,6 +1,7 @@
 package de.mpicbg.scf.mincostsurface;
 
 
+import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
@@ -9,6 +10,7 @@ import net.imglib2.Interval;
 import net.imglib2.RandomAccess;
 import net.imglib2.RealRandomAccess;
 import net.imglib2.util.Intervals;
+import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 import net.imglib2.algorithm.gauss3.Gauss3;
 import net.imglib2.exception.IncompatibleTypeException;
@@ -18,7 +20,6 @@ import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.interpolation.randomaccess.LanczosInterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
-//import ij.IJ;
 
 // Todo: add the volume reslice
 
@@ -231,8 +232,97 @@ public class img_utils {
 		
 		return excerpt;
 	}
-	
-	
+
+	public static <T extends NumericType<T> & NativeType<T> , U extends RealType<U> >
+	Img<T> ZSurface_reslice3(Img<T> input, Img<U> depthMap, int sliceOnTop, int sliceBelow, int numThreads)
+	{
+		final long[][] inputOffset = createOffset(input, numThreads);
+
+		int nDim = input.numDimensions();
+		long[] dims = new long[nDim];
+		input.dimensions(dims);
+		long output_height = sliceOnTop + sliceBelow + 1;
+
+		final ImgFactory< T > imgFactory = new ArrayImgFactory< T >();
+		final Img< T > excerpt = imgFactory.create( new long[] {dims[0],dims[1], output_height} , input.firstElement().createVariable() );
+		long unit = dims[1] / numThreads;
+
+		final long[][] offset = createOffset(excerpt, numThreads);
+
+		final long[][] depthMapOffset = createOffset(depthMap, numThreads);
+
+		NLinearInterpolatorFactory<T> NLinterp_factory = new NLinearInterpolatorFactory<T>();
+		final Thread[] threads = SimpleMultiThreading.newThreads( numThreads );
+		for ( int i = 0; i < threads.length; i++ )
+		{
+			int finalI = i;
+			threads[ i ] = new Thread( "ZSurface Reslice thread " + finalI)
+			{
+				@Override
+				public void run()
+				{
+					IntervalView< T > excerptIntervalView = createIntervalView(excerpt, offset[finalI], unit);
+					RandomAccess< T > randomAccess = excerptIntervalView.randomAccess();
+					Cursor< T > excerpt_cursor = excerptIntervalView.cursor();
+
+					IntervalView< T > intervalView = Views.offset( input, inputOffset[finalI] );
+					RealRandomAccess< T > inputx_Real = Views.interpolate( Views.extendBorder( intervalView ), NLinterp_factory ).realRandomAccess();
+
+					IntervalView< U > depthMapIntervalView = Views.offset(depthMap, depthMapOffset[finalI] );
+					RandomAccess< U > depthMapx = depthMapIntervalView.randomAccess();
+
+					float z_map;
+					int[] tmp_pos = new int[nDim];
+
+					while(excerpt_cursor.hasNext())
+					{
+						excerpt_cursor.fwd();
+						excerpt_cursor.localize(tmp_pos);
+						depthMapx.setPosition(new int[] {tmp_pos[0],tmp_pos[1]});
+						z_map =  depthMapx.get().getRealFloat();
+
+						inputx_Real.setPosition(new float[] {(float)tmp_pos[0],(float)tmp_pos[1], (float)(tmp_pos[2]-(sliceOnTop)) + z_map });
+						randomAccess.setPosition(excerpt_cursor);
+						randomAccess.get().set( inputx_Real.get() );
+					}
+				}
+			};
+		}
+
+		SimpleMultiThreading.startAndJoin( threads );
+		return excerpt;
+	}
+
+	private static <T> IntervalView<T> createIntervalView(Img<T> img, long[] offset, long unit) {
+		long[] max = new long[img.numDimensions()];
+		img.dimensions(max);
+		max[1] = unit;
+
+		if( (offset[1] + unit) > img.dimension(1) ) {
+			max[1] = img.dimension(1) - unit * (offset.length - 1);
+			System.out.println(max[1]);
+		}
+
+		return Views.offsetInterval(img, offset, max);
+	}
+
+	static long[][] createOffset(Img img, int numThreads) {
+		final long[][] offset = new long[ numThreads ][ img.numDimensions() ];
+
+		for ( int d = 0; d < offset.length; d++ )
+		{
+			offset[d] = new long[img.numDimensions()];
+
+			for (int i = 0; i < offset[d].length; i++) {
+				offset[d][i] = 0;
+			}
+			// height
+			offset[d][1] = img.dimension( 1 ) / numThreads * d;
+		}
+		return offset;
+	}
+
+
 	/**
 	 * 
 	 * @param input a 3D image

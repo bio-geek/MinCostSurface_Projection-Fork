@@ -1,11 +1,3 @@
-/*
- * To the extent possible under law, the ImageJ developers have waived
- * all copyright and related or neighboring rights to this tutorial code.
- *
- * See the CC0 1.0 Universal license for details:
- *     http://creativecommons.org/publicdomain/zero/1.0/
- */
-
 package de.mpicbg.scf.mincostsurface;
 
 import net.imagej.Dataset;
@@ -15,26 +7,23 @@ import net.imagej.ops.Op;
 import net.imagej.ops.OpService;
 import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
-
 import org.scijava.ItemIO;
-//import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import java.io.File;
 
+/**
+ * Author: HongKee Moon (moon@mpi-cbg.de), Scientific Computing Facility
+ * Organization: MPI-CBG Dresden
+ * Date: October 2019
+ */
+@Plugin(type = Op.class, name="zMapResliceMT", headless = true, label="zMapResliceMT", visible=true, menuPath = "Plugins>Z map reslice>Multi Threads")
+public class ResliceAlongZMapMT_Ops < T extends RealType<T> & NativeType< T >, U extends RealType<U>> extends AbstractOp {
 
-// ImageJ collapse when running that plugin
 
-//@Plugin(type = Command.class, menuPath = "Plugins>Z map reslice")
-
-@Plugin(type = Op.class, name="zMapReslice", headless = true, label="zMapReslice", visible=true, menuPath = "Plugins>Z map reslice>Single Thread")
-public class ResliceAlongZMap_Ops < T extends NumericType<T> & NativeType< T >, U extends RealType<U> > extends AbstractOp {
-    
-
-    @Parameter ( label = "input image" )
+    @Parameter( label = "input image" )
     private Img input;
 
     @Parameter ( label = "z map" )
@@ -45,29 +34,31 @@ public class ResliceAlongZMap_Ops < T extends NumericType<T> & NativeType< T >, 
 
     @Parameter ( label = "slice Below the z map" )
     private int sliceBelow;
-   
-    
+
+    @Parameter ( label = "Number of Threads")
+    private int numThreads;
+
+
     // output
     @Parameter  (type = ItemIO.OUTPUT)
     private Img<T> outputExcerpt;
 
-     
+
     @Parameter
     OpService op;
-	
+
     @Override
     public void run() {
-    	
-    	Img<T> input_img = (Img<T>) input;
-    	Img<U> zMap_img = (Img<U>) zMap;
-    	
-    	outputExcerpt = img_utils.ZSurface_reslice2(input_img, zMap_img, sliceAbove, sliceBelow);
-    	
+
+        Img<T> input_img = (Img<T>) input;
+        Img<U> zMap_img = (Img<U>) zMap;
+
+        outputExcerpt = img_utils.ZSurface_reslice3(input_img, zMap_img, sliceAbove, sliceBelow, numThreads);
     }
 
-    
-    
-    
+
+
+
     public static void main(final String... args) throws Exception {
         // create the ImageJ application context with all available services
         final ImageJ ij = new ImageJ();
@@ -88,10 +79,9 @@ public class ResliceAlongZMap_Ops < T extends NumericType<T> & NativeType< T >, 
         }
     }
 
-    
-    
-}
 
+
+}
 
 
 
